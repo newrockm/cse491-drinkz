@@ -62,6 +62,28 @@ def test_bulk_load_inventory_1():
     assert db.check_inventory('Johnnie Walker', 'Black Label')
     assert n == 1, n
 
+def test_bulk_load_inventory_2():
+    # test to make sure commented lines in a file are ignored
+    db._reset_db()
+
+    db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
+    fp = open('test-data/bottle-types-data-1.txt')
+    n = load_bulk_data.load_inventory(fp)
+
+    assert db.check_inventory('Johnnie Walker', 'Black Label')
+    assert n == 1, n
+
+def test_bulk_load_inventory_3():
+    # test to make sure commented and empty lines in a file are ignored
+    db._reset_db()
+
+    db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
+    fp = open('test-data/bottle-types-data-2.txt')
+    n = load_bulk_data.load_inventory(fp)
+
+    assert db.check_inventory('Johnnie Walker', 'Black Label')
+    assert n == 1, n
+
 def test_get_liquor_amount_2():
     db._reset_db()
 
@@ -84,6 +106,26 @@ def test_bulk_load_bottle_types_1():
     assert db._check_bottle_type_exists('Johnnie Walker', 'Black Label')
     assert n == 1, n
 
+def test_bulk_load_bottle_types_2():
+    # test to make sure commented lines in a file are ignored
+    db._reset_db()
+
+    fp = open('test-data/bottle-types-data-1.txt')
+    n = load_bulk_data.load_bottle_types(fp)
+
+    assert db._check_bottle_type_exists('Johnnie Walker', 'Black Label')
+    assert n == 1, n
+
+def test_bulk_load_bottle_types_3():
+    # test to make sure commented and empty lines in a file are ignored
+    db._reset_db()
+
+    fp = open('test-data/bottle-types-data-2.txt')
+    n = load_bulk_data.load_bottle_types(fp)
+
+    assert db._check_bottle_type_exists('Johnnie Walker', 'Black Label')
+    assert n == 1, n
+
 def test_script_load_bottle_types_1():
     scriptpath = 'bin/load-liquor-types'
     module = imp.load_source('llt', scriptpath)
@@ -91,7 +133,7 @@ def test_script_load_bottle_types_1():
 
     assert exit_code == 0, 'non zero exit code %s' % exit_code
     
-def test_get_liquor_inventory():
+def test_get_liquor_inventory_1():
     db._reset_db()
 
     db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
@@ -102,3 +144,4 @@ def test_get_liquor_inventory():
         x.append((mfg, liquor))
 
     assert x == [('Johnnie Walker', 'Black Label')], x
+
