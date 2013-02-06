@@ -1,0 +1,17 @@
+import drinkz.db
+
+drinkz.db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
+drinkz.db.add_to_inventory('Johnnie Walker', 'Black Label', '1000 ml')
+drinkz.db.add_to_inventory('Johnnie Walker', 'Black Label', '500 ml')
+
+seen_bottles = set()
+
+print '%-20s\t%-20s\t%-10s' % ('Manufacturer', 'Liquor', 'Amount')
+print '-' * 20 + '\t' + '-' * 20 + '\t' + '-' * 10
+for mfg, liquor in drinkz.db.get_liquor_inventory():
+    # inventory will report each bottle separately.  combine and dedupe.
+    if (mfg, liquor) in seen_bottles:
+        continue
+    seen_bottles.add((mfg, liquor))
+    amount = drinkz.db.get_liquor_amount(mfg, liquor)
+    print '%-20s\t%-20s\t%-10s' % (mfg, liquor, amount)
