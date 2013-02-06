@@ -12,6 +12,23 @@ import csv                              # Python csv package
 
 from . import db                        # import from local package
 
+def csv_reader(fp):
+    """
+    A generator to return parsed lines from a csv file.  Ignore comments
+    (lines starting with #) and blank lines).
+
+    Takes a file pointer.
+
+    Yields a list from the parsed csv line.
+    """
+    reader = csv.reader(fp)
+
+    for line in reader:
+        if len(line) == 0 or line[0].startswith('#'):
+            continue
+
+        yield line
+
 def load_bottle_types(fp):
     """
     Loads in data of the form manufacturer/liquor name/type from a CSV file.
@@ -22,17 +39,17 @@ def load_bottle_types(fp):
 
     Returns number of bottle types loaded
     """
-    reader = csv.reader(fp)
+    reader = csv_reader(fp)
 
     x = []
     n = 0
-    for line in reader:
-        if len(line) == 0 or line[0].startswith('#'):
-            continue
-        
-        (mfg, name, typ) = line
-        n += 1
-        db.add_bottle_type(mfg, name, typ)
+    try:
+        for mfg, name, typ in reader:
+            n += 1
+            db.add_bottle_type(mfg, name, typ)
+    except TypeError:
+        print "Ignoring malformed line."
+        pass
 
     return n
 
@@ -49,17 +66,16 @@ def load_inventory(fp):
     Note that a LiquorMissing exception is raised if bottle_types_db does
     not contain the manufacturer and liquor name already.
     """
-    reader = csv.reader(fp)
+    reader = csv_reader(fp)
 
     x = []
     n = 0
-        
-    for line in reader:
-        if len(line) == 0 or line[0].startswith('#'):
-            continue
-        
-        (mfg, name, amount) = line
-        n += 1
-        db.add_to_inventory(mfg, name, amount)
+    try:
+        for mfg, name, amount in reader:
+            n += 1
+            db.add_to_inventory(mfg, name, amount)
+    except ValueError:
+        print "Ignoring malformed line."
+        pass
 
     return n

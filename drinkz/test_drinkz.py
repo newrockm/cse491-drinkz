@@ -145,3 +145,12 @@ def test_get_liquor_inventory_1():
 
     assert x == [('Johnnie Walker', 'Black Label')], x
 
+def test_read_bad_csv_file():
+    db._reset_db()
+
+    fp = open('test-data/bottle-types-data-3.txt')
+    n = load_bulk_data.load_bottle_types(fp)
+
+    assert db._check_bottle_type_exists('Johnnie Walker', 'Black Label') == False
+    assert n == 0, n
+
