@@ -62,26 +62,32 @@ def test_bulk_load_inventory_1():
     assert db.check_inventory('Johnnie Walker', 'Black Label')
     assert n == 1, n
 
-def test_bulk_load_inventory_2():
+def test_bulk_load_inventory_from_file_1():
     # test to make sure commented lines in a file are ignored
     db._reset_db()
 
     db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
-    fp = open('test-data/bottle-types-data-1.txt')
+    fp = open('test-data/inventory-data-1.txt')
     n = load_bulk_data.load_inventory(fp)
+    fp.close()
 
     assert db.check_inventory('Johnnie Walker', 'Black Label')
+    amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
+    assert amount == '1000 ml', amount
     assert n == 1, n
 
-def test_bulk_load_inventory_3():
+def test_bulk_load_inventory_from_file_2():
     # test to make sure commented and empty lines in a file are ignored
     db._reset_db()
 
     db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
-    fp = open('test-data/bottle-types-data-2.txt')
+    fp = open('test-data/inventory-data-2.txt')
     n = load_bulk_data.load_inventory(fp)
+    fp.close()
 
     assert db.check_inventory('Johnnie Walker', 'Black Label')
+    amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
+    assert amount == '1000 ml', amount
     assert n == 1, n
 
 def test_get_liquor_amount_2():
@@ -106,22 +112,24 @@ def test_bulk_load_bottle_types_1():
     assert db._check_bottle_type_exists('Johnnie Walker', 'Black Label')
     assert n == 1, n
 
-def test_bulk_load_bottle_types_2():
+def test_bulk_load_bottle_types_from_file_1():
     # test to make sure commented lines in a file are ignored
     db._reset_db()
 
     fp = open('test-data/bottle-types-data-1.txt')
     n = load_bulk_data.load_bottle_types(fp)
+    fp.close()
 
     assert db._check_bottle_type_exists('Johnnie Walker', 'Black Label')
     assert n == 1, n
 
-def test_bulk_load_bottle_types_3():
+def test_bulk_load_bottle_types_from_file_2():
     # test to make sure commented and empty lines in a file are ignored
     db._reset_db()
 
     fp = open('test-data/bottle-types-data-2.txt')
     n = load_bulk_data.load_bottle_types(fp)
+    fp.close()
 
     assert db._check_bottle_type_exists('Johnnie Walker', 'Black Label')
     assert n == 1, n
@@ -145,12 +153,24 @@ def test_get_liquor_inventory_1():
 
     assert x == [('Johnnie Walker', 'Black Label')], x
 
-def test_read_bad_csv_file():
+def test_read_bad_csv_file_load_bottle_types():
     db._reset_db()
 
     fp = open('test-data/bottle-types-data-3.txt')
     n = load_bulk_data.load_bottle_types(fp)
+    fp.close()
 
     assert db._check_bottle_type_exists('Johnnie Walker', 'Black Label') == False
+    assert n == 0, n
+
+def test_read_bad_csv_file_load_inventory():
+    db._reset_db()
+
+    db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
+    fp = open('test-data/inventory-data-3.txt')
+    n = load_bulk_data.load_inventory(fp)
+    fp.close()
+
+    assert db.check_inventory('Johnnie Walker', 'Black Label') == False
     assert n == 0, n
 

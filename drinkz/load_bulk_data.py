@@ -47,7 +47,7 @@ def load_bottle_types(fp):
         for mfg, name, typ in reader:
             n += 1
             db.add_bottle_type(mfg, name, typ)
-    except TypeError:
+    except ValueError:
         print "Ignoring malformed line."
         pass
 
