@@ -46,12 +46,29 @@ def check_inventory(mfg, liquor):
 
 def get_liquor_amount(mfg, liquor):
     "Retrieve the total amount of any given liquor currently in inventory."
-    amounts = []
+    total_amount = 0
     for (m, l, amount) in _inventory_db:
         if mfg == m and liquor == l:
-            amounts.append(amount)
+            try:
+                qty, unit = amount.split()
+                qty = int(qty)
+            except ValueError:
+                print "Skipping bad amount: " + amount
+                continue
+            
+            if unit == 'ml':
+                total_amount += qty
 
-    return amounts[0]
+            elif unit == 'oz':
+                # 1oz = 29.5735ml (according to google calc)
+                total_amount += qty * 29.5735
+
+            else:
+                print "Skipping bad amount: " + amount
+
+    # we're going to get rounding errors, so this is a good place to
+    # round so we don't have fractional ml.
+    return '%d ml' % round(total_amount)
 
 def get_liquor_inventory():
     "Retrieve all liquor types in inventory, in tuple form: (mfg, liquor)."
