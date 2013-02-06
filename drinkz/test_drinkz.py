@@ -170,6 +170,29 @@ def test_script_load_bottle_types_1():
 
     assert exit_code == 0, 'non zero exit code %s' % exit_code
     
+def test_script_load_inventory_1():
+    scriptpath = 'bin/load-liquor-inventory'
+    module = imp.load_source('llt', scriptpath)
+    exit_code = module.main([
+        scriptpath, 
+        'test-data/bottle-types-data-1.txt',
+        'test-data/inventory-data-1.txt'
+    ])
+
+    assert exit_code == 0, 'non zero exit code %s' % exit_code
+
+def test_script_load_inventory_2():
+    # make sure script exits non-success if a bad filename is provided
+    scriptpath = 'bin/load-liquor-inventory'
+    module = imp.load_source('llt', scriptpath)
+    exit_code = module.main([
+        scriptpath, 
+        'bad_path_1',
+        'bad_path_2'
+    ])
+
+    assert exit_code != 0, 'incorrect successful exit'
+
 def test_get_liquor_inventory_1():
     db._reset_db()
 
