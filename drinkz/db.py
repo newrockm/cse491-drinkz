@@ -46,6 +46,9 @@ def add_to_inventory(mfg, liquor, amount):
         # 1oz = 29.5735ml (according to google calc)
         qty = qty * 29.5735
 
+    elif unit == 'gallon':
+        qty = qty * 29.5735 * 128
+
     elif unit != 'ml':
         raise ValueError("Invalid unit in amount '%s'" % amount)
 
@@ -66,8 +69,7 @@ def get_liquor_amount(mfg, liquor):
     except KeyError:
         raise Exception("(%s, %s) not in inventory" % (mfg, liquor))
 
-    # callers expect a string declaring ml
-    return '%d ml' % round(qty)
+    return round(qty, 2)
 
 def get_liquor_inventory():
     "Retrieve all liquor types in inventory, in tuple form: (mfg, liquor)."
