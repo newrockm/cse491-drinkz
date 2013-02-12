@@ -3,13 +3,13 @@ Database functionality for drinkz information.
 """
 
 # private singleton variables at module level
-_bottle_types_db = []
+_bottle_types_db = set()
 _inventory_db = []
 
 def _reset_db():
     "A method only to be used during testing -- toss the existing db info."
     global _bottle_types_db, _inventory_db
-    _bottle_types_db = []
+    _bottle_types_db = set()
     _inventory_db = []
 
 # exceptions in Python inherit from Exception and generally don't need to
@@ -19,7 +19,7 @@ class LiquorMissing(Exception):
 
 def add_bottle_type(mfg, liquor, typ):
     "Add the given bottle type into the drinkz database."
-    _bottle_types_db.append((mfg, liquor, typ))
+    _bottle_types_db.add((mfg, liquor, typ))
 
 def _check_bottle_type_exists(mfg, liquor):
     for (m, l, _) in _bottle_types_db:
