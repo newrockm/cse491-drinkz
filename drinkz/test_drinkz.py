@@ -42,6 +42,26 @@ def test_add_to_inventory_2():
         # this is the correct result: catch exception.
         pass
 
+def test_add_to_inventory_3():
+    db._reset_db()
+
+    db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
+    try:
+        db.add_to_inventory('Johnnie Walker', 'Black Label', '250')
+        assert False, 'Added bottle to inventory with no units in amount'
+    except ValueError:
+        pass
+
+def test_add_to_inventory_4():
+    db._reset_db()
+
+    db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
+    try:
+        db.add_to_inventory('Johnnie Walker', 'Black Label', '100 m l')
+        assert False, 'Added bottle to inventory with a bad unit in amount'
+    except ValueError:
+        pass
+
 def test_get_liquor_amount_1():
     db._reset_db()
 
@@ -74,8 +94,6 @@ def test_get_liquor_amount_4():
     db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
     db.add_to_inventory('Johnnie Walker', 'Black Label', '1000 ml')
     db.add_to_inventory('Johnnie Walker', 'Black Label', '500 ml')
-    db.add_to_inventory('Johnnie Walker', 'Black Label', '250')
-    db.add_to_inventory('Johnnie Walker', 'Black Label', '100 m l')
     amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
     assert amount == '1500 ml', amount
 
