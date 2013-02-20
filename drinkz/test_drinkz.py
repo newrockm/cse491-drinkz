@@ -244,3 +244,15 @@ def test_read_bad_csv_file_load_inventory():
     assert db.check_inventory('Johnnie Walker', 'Black Label') == False
     assert n == 0, n
 
+def test_convert_oz_to_ml():
+    ml = db.convert_to_ml('5 oz')
+    assert round(ml, 2) == 147.87, ml
+
+def test_convert_gallon_to_ml():
+    ml = db.convert_to_ml('2 gallons')
+    assert round(ml, 2) == 7570.82, ml
+
+def test_convert_liter_to_ml():
+    ml = db.convert_to_ml('3.5 liters')
+    assert ml == 3500, ml
+
