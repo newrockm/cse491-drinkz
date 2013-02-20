@@ -35,6 +35,10 @@ def _check_bottle_type_exists(mfg, liquor):
 
     return False
 
+def get_bottle_types():
+    for bottle in _bottle_types_db:
+        yield bottle
+
 def add_to_inventory(mfg, liquor, amount):
     "Add the given liquor/amount to inventory."
     if not _check_bottle_type_exists(mfg, liquor):
