@@ -120,19 +120,17 @@ def convert_to_ml(amount):
     except ValueError:
         raise ValueError("Invalid amount '%s'" % amount)
 
-    # we only accept ml, oz, or gallons
-    if unit == 'oz':
-        # 1oz = 29.5735ml (according to google calc)
-        qty = qty * 29.5735
+    conversion = {
+        'ml': 1,
+        'oz': 29.5735,
+        'gallon': 29.5735 * 128,
+        'gallons': 29.5735 * 128,
+        'liter': 1000,
+        'liters': 1000
+    }
 
-    elif unit == 'gallon' or unit == 'gallons':
-        qty = qty * 29.5735 * 128
-
-    elif unit == 'liter' or unit == 'liters':
-        qty = qty * 1000
-
-    elif unit != 'ml':
+    try:
+        return qty * conversion[unit]
+    except KeyError:
         raise ValueError("Invalid unit in amount '%s'" % amount)
-        
-    return qty
 
