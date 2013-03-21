@@ -49,6 +49,7 @@ def load_bottle_types(fp):
             n += 1
             db.add_bottle_type(mfg, name, typ)
         except ValueError:
+            print "Ignoring malformed line."
             pass
 
     return n
@@ -70,12 +71,13 @@ def load_inventory(fp):
 
     x = []
     n = 0
-    try:
-        for mfg, name, amount in reader:
+    for line in reader:
+        try:
+            mfg, name, amount = line
             n += 1
             db.add_to_inventory(mfg, name, amount)
-    except ValueError:
-        print "Ignoring malformed line."
-        pass
+        except ValueError:
+            print "Ignoring malformed line."
+            pass
 
     return n
