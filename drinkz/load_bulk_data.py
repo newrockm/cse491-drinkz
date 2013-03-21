@@ -27,7 +27,6 @@ def csv_reader(fp):
         if len(line) == 0 or line[0].startswith('#'):
             continue
 
-        print line
         yield line
 
 def load_bottle_types(fp):
@@ -44,13 +43,13 @@ def load_bottle_types(fp):
 
     x = []
     n = 0
-    try:
-        for mfg, name, typ in reader:
+    for line in reader:
+        try:
+            mfg, name, typ = line
             n += 1
             db.add_bottle_type(mfg, name, typ)
-    except ValueError:
-        print "Ignoring malformed line."
-        pass
+        except ValueError:
+            pass
 
     return n
 
