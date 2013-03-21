@@ -27,6 +27,7 @@ def csv_reader(fp):
         if len(line) == 0 or line[0].startswith('#'):
             continue
 
+        print line
         yield line
 
 def load_bottle_types(fp):

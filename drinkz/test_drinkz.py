@@ -120,7 +120,7 @@ def test_bulk_load_inventory_from_file_1():
 
     assert db.check_inventory('Johnnie Walker', 'Black Label')
     amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
-    assert amount == 1000, amount
+    assert amount == 1234, amount
     assert n == 1, n
 
 def test_bulk_load_inventory_from_file_2():
