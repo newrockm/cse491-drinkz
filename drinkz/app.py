@@ -1,16 +1,16 @@
 #! /usr/bin/env python
+
 from wsgiref.simple_server import make_server
 import urlparse
-import simplejson
+import db
 
 dispatch = {
     '/' : 'index',
-    '/content' : 'somefile',
-    '/error' : 'error',
-    '/helmet' : 'helmet',
-    '/form' : 'form',
-    '/recv' : 'recv',
-    '/rpc'  : 'dispatch_rpc'
+    '/bottletypes' : 'show_bottle_types',
+    '/inventory' : 'show_inventory',
+    '/recipes' : 'show_recipes',
+    '/convert' : 'ml_convert_form',
+    '/convertresult' : 'show_ml_convert',
 }
 
 html_headers = [('Content-type', 'text/html')]
@@ -33,27 +33,33 @@ class SimpleApp(object):
         return fn(environ, start_response)
             
     def index(self, environ, start_response):
-        data = """\
-<p>
-View:
-[ <a href="bottletypes">Bottle Types</a> ]
-&nbsp;
-[ <a href="inventory">Inventory</a> ]
-&nbsp;
-[ <a href="recipes">Recipes</a> ]
-</p>
-
-<p>
-<a href="convert">Convert to milliliters</a>
-</p>
-"""
+        data = menu()
         start_response('200 OK', list(html_headers))
         return [data]
         
-    def somefile(self, environ, start_response):
-        content_type = 'text/html'
-        data = open('somefile.html').read()
+    def ml_convert_form(self, environ, start_response):
+        data = menu()
+        data += ml_form()
+        start_response('200 OK', list(html_headers))
+        return [data]
 
+    # http://webpython.codepoint.net/wsgi_request_parsing_post
+    def show_ml_convert(self, environ, start_response):
+        data = menu()
+
+        if environ['REQUEST_METHOD'].endswith('POST'):
+            body = None
+            if environ.get('CONTENT_LENGTH'):
+                length = int(environ['CONTENT_LENGTH'])
+                body = environ['wsgi.input'].read(length)
+                d = urlparse.parse_qs(body)
+                try:
+                    amount = "%s %s" % (d['amount'][0], d['unit'][0])
+                    converted = db.convert_to_ml(amount)
+                    data += "<p>%s is %d ml</p>" % (amount, converted)
+                except KeyError:
+                    data += "<p>Error processing form.</p>"
+        data += '<p><a href="/">Return to index</a></p>'
         start_response('200 OK', list(html_headers))
         return [data]
 
@@ -65,96 +71,32 @@ View:
         start_response('200 OK', list(html_headers))
         return [data]
 
-    def helmet(self, environ, start_response):
-        content_type = 'image/gif'
-        data = open('Spartan-helmet-Black-150-pxls.gif', 'rb').read()
-
-        start_response('200 OK', [('Content-type', content_type)])
-        return [data]
-
-    def form(self, environ, start_response):
-        data = form()
-
-        start_response('200 OK', list(html_headers))
-        return [data]
-   
-    def recv(self, environ, start_response):
-        formdata = environ['QUERY_STRING']
-        results = urlparse.parse_qs(formdata)
-
-        firstname = results['firstname'][0]
-        lastname = results['lastname'][0]
-
-        content_type = 'text/html'
-        data = "First name: %s; last name: %s.  <a href='./'>return to index</a>" % (firstname, lastname)
-
-        start_response('200 OK', list(html_headers))
-        return [data]
-
-    def dispatch_rpc(self, environ, start_response):
-        # POST requests deliver input data via a file-like handle,
-        # with the size of the data specified by CONTENT_LENGTH;
-        # see the WSGI PEP.
-        
-        if environ['REQUEST_METHOD'].endswith('POST'):
-            body = None
-            if environ.get('CONTENT_LENGTH'):
-                length = int(environ['CONTENT_LENGTH'])
-                body = environ['wsgi.input'].read(length)
-                response = self._dispatch(body) + '\n'
-                start_response('200 OK', [('Content-Type', 'application/json')])
-
-                return [response]
-
-        # default to a non JSON-RPC error.
-        status = "404 Not Found"
-        content_type = 'text/html'
-        data = "Couldn't find your stuff."
-       
-        start_response('200 OK', list(html_headers))
-        return [data]
-
-    def _decode(self, json):
-        return simplejson.loads(json)
-
-    def _dispatch(self, json):
-        rpc_request = self._decode(json)
-
-        method = rpc_request['method']
-        params = rpc_request['params']
-        
-        rpc_fn_name = 'rpc_' + method
-        fn = getattr(self, rpc_fn_name)
-        result = fn(*params)
-
-        response = { 'result' : result, 'error' : None, 'id' : 1 }
-        response = simplejson.dumps(response)
-        return str(response)
-
-    def rpc_hello(self):
-        return 'world!'
-
-    def rpc_add(self, a, b):
-        return int(a) + int(b)
     
-def form():
+def menu():
     return """
-<form action='recv'>
-Your first name? <input type='text' name='firstname' size'20'>
-Your last name? <input type='text' name='lastname' size='20'>
-<input type='submit'>
-</form>
+<p>
+View:
+[ <a href="bottletypes">Show Bottle Types</a> ]
+&nbsp;
+[ <a href="inventory">Show Inventory</a> ]
+&nbsp;
+[ <a href="recipes">Show Recipes</a> ]
+&nbsp;
+[ <a href="convert">Convert to milliliters</a> ]
+</p>
 """
 
-if __name__ == '__main__':
-    import random, socket
-    port = random.randint(8000, 9999)
-    
-    app = SimpleApp()
-    
-    httpd = make_server('', port, app)
-    print "Serving on port %d..." % port
-    print "Try using a Web browser to go to http://%s:%d/" % \
-          (socket.getfqdn(), port)
-    httpd.serve_forever()
+def ml_form():
+    return """
+<form action="convertresult" method="post">
+    Amount: <input type="text" name="amount" size="10">
+    Unit: <select name="unit">
+        <option value="ml">milliliters</option>
+        <option value="l">liters</option>
+        <option value="oz" selected="selected">ounces</option>
+        <option value="gallon">gallons</option>
+    </select>
+    <input type="submit">
+</form>
+"""
 
