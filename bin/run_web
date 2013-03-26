@@ -1,0 +1,21 @@
+#! /usr/bin/env python
+
+import random, socket
+import _mypath
+
+from drinkz import app
+
+def main():
+    port = random.randint(8000, 9999)
+    
+    server = app.SimpleApp()
+    
+    httpd = app.make_server('', port, server)
+    print "Serving on port %d..." % port
+    print "Try using a Web browser to go to http://%s:%d/" % \
+          (socket.getfqdn(), port)
+    httpd.serve_forever()
+
+if __name__ == '__main__':
+    main()
+
