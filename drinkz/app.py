@@ -34,14 +34,18 @@ class SimpleApp(object):
             
     def index(self, environ, start_response):
         data = """\
-Visit:
-<a href='content'>a file</a>,
-<a href='error'>an error</a>,
-<a href='helmet'>an image</a>,
-<a href='somethingelse'>something else</a>, or
-<a href='form'>a form...</a>
 <p>
-<img src='/helmet'>
+View:
+[ <a href="bottletypes">Bottle Types</a> ]
+&nbsp;
+[ <a href="inventory">Inventory</a> ]
+&nbsp;
+[ <a href="recipes">Recipes</a> ]
+</p>
+
+<p>
+<a href="convert">Convert to milliliters</a>
+</p>
 """
         start_response('200 OK', list(html_headers))
         return [data]
