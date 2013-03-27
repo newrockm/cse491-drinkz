@@ -37,9 +37,79 @@ class SimpleApp(object):
         start_response('200 OK', list(html_headers))
         return [data]
         
+    def show_bottle_types(self, environ, start_response):
+        data = menu()
+        data += """<table>
+    <tr>
+        <th>Manufacturer</th>
+        <th>Liquor</th>
+        <th>Type</th>
+    </tr>
+"""
+        for (mfg, liquor, typ) in db.get_bottle_types():
+            data += """
+    <tr>
+        <td>%s</td>
+        <td>%s</td>
+        <td>%s</td>
+    </tr>
+""" % (mfg, liquor, typ)
+        data += "</table>"
+        data += footer()
+        start_response('200 OK', list(html_headers))
+        return [data]
+
+    def show_inventory(self, environ, start_response):
+        data = menu()
+        data += """<table>
+    <tr>
+        <th>Manufacturer</th>
+        <th>Liquor</th>
+        <th>Amount</th>
+    </tr>
+"""
+        for (mfg, liquor) in db.get_liquor_inventory():
+            amount = db.get_liquor_amount(mfg, liquor)
+            data += """
+    <tr>
+        <td>%s</td>
+        <td>%s</td>
+        <td>%f</td>
+    </tr>
+""" % (mfg, liquor, amount)
+        data += "</table>"
+        data += footer()
+        start_response('200 OK', list(html_headers))
+        return [data]
+
+    def show_recipes(self, environ, start_response):
+        data = menu()
+        data += """<table>
+    <tr>
+        <th>Recipes</th>
+        <th>Ingredients</th>
+        <th>Missing Ingredients</th>
+    </tr>
+"""
+        for recipe in db.get_all_recipes():
+            ingredients = ', '.join(db.ingredients)
+            missing_ingredients = ', '.join(db.need_ingredients())
+            data += """
+    <tr>
+        <td>%s</td>
+        <td>%s</td>
+        <td>%f</td>
+    </tr>
+""" % (recipe.name, ingredients, missing_ingredients)
+        data += "</table>"
+        data += footer()
+        start_response('200 OK', list(html_headers))
+        return [data]
+
     def ml_convert_form(self, environ, start_response):
         data = menu()
         data += ml_form()
+        data += footer()
         start_response('200 OK', list(html_headers))
         return [data]
 
@@ -59,7 +129,7 @@ class SimpleApp(object):
                     data += "<p>%s is %d ml</p>" % (amount, converted)
                 except KeyError:
                     data += "<p>Error processing form.</p>"
-        data += '<p><a href="/">Return to index</a></p>'
+        data += footer()
         start_response('200 OK', list(html_headers))
         return [data]
 
@@ -77,14 +147,14 @@ def menu():
 <p>
 View:
 [ <a href="bottletypes">Show Bottle Types</a> ]
-&nbsp;
 [ <a href="inventory">Show Inventory</a> ]
-&nbsp;
 [ <a href="recipes">Show Recipes</a> ]
-&nbsp;
 [ <a href="convert">Convert to milliliters</a> ]
 </p>
 """
+
+def footer():
+    return '<p><a href="/">Return to index</a></p>'
 
 def ml_form():
     return """
