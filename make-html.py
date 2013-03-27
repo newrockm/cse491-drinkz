@@ -1,33 +1,13 @@
 from drinkz import db
 from drinkz import recipes
 import os
+import sys
 
-# add bottles to the inventory
-db.add_bottle_type('Johnnie Walker', 'black label', 'blended scotch')
-db.add_to_inventory('Johnnie Walker', 'black label', '500 ml')
+if len(sys.argv) != 2:
+    print >>sys.stderr, "Usage: %s <filename>" % sys.argv[0]
+    sys.exit(1)
 
-db.add_bottle_type('Uncle Herman\'s', 'moonshine', 'blended scotch')
-db.add_to_inventory('Uncle Herman\'s', 'moonshine', '5 liter')
-
-db.add_bottle_type('Gray Goose', 'vodka', 'unflavored vodka')
-db.add_to_inventory('Gray Goose', 'vodka', '1 liter')
-
-db.add_bottle_type('Rossi', 'extra dry vermouth', 'vermouth')
-db.add_to_inventory('Rossi', 'extra dry vermouth', '24 oz')
-
-# add recipes to the inventory
-r = recipes.Recipe('scotch on the rocks', [('blended scotch', '4 oz')])
-db.add_recipe(r)
-
-r = recipes.Recipe('vomit inducing martini', [('orange juice', '6 oz'),
-                                              ('vermouth', '1.5 oz')])
-db.add_recipe(r)
-
-r = recipes.Recipe('small whiskey bath', [('blended scotch', '2 liter')])
-db.add_recipe(r)
-
-r = recipes.Recipe('large whiskey bath', [('blended scotch', '6 liter')])
-db.add_recipe(r)
+db.load_db(sys.argv[1])
 
 # everything will go into the html directory
 try:

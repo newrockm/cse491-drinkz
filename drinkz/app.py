@@ -32,6 +32,9 @@ class SimpleApp(object):
 
         return fn(environ, start_response)
             
+    def load_db(self, filename):
+        db.load_db(filename)
+
     def index(self, environ, start_response):
         data = menu()
         start_response('200 OK', list(html_headers))

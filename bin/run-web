@@ -7,19 +7,20 @@ import _mypath
 from drinkz import app
 
 def main(args):
-    if len(args) > 2:
-        print >>sys.stderr, 'Usage: %s [port]' % args[0]
+    if len(args) > 3 or len(args) < 2:
+        print >>sys.stderr, 'Usage: %s <filename> [port]' % args[0]
         sys.exit(1)
 
     # if no port supplied, use a random port
     try:
         # assume user was smart enough to put a number
-        port = int(args[1])
+        port = int(args[2])
     except KeyError:
         port = random.randint(8000, 9999)
     
     server = app.SimpleApp()
-    
+    server.load_db(args[1])
+
     httpd = app.make_server('', port, server)
     print "Serving on port %d..." % port
     print "Try using a Web browser to go to http://%s:%d/" % \
