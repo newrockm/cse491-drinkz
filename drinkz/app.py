@@ -93,19 +93,19 @@ class SimpleApp(object):
 """
         for recipe in db.get_all_recipes():
             ingredients = []
-            for liquor, amount in db.ingredients:
-                ingredients.append("%.2fml %s" % (amount, liquor))
+            for liquor, amount in recipe.ingredients:
+                ingredients.append("%s %s" % (amount, liquor))
             ingredients = ', '.join(ingredients)
 
             missing_ingredients = []
-            for liquor, amount in db.need_ingredients:
+            for liquor, amount in recipe.need_ingredients():
                 missing_ingredients.append("%.2fml %s" % (amount, liquor))
             missing_ingredients = ', '.join(missing_ingredients)
             data += """
     <tr>
         <td>%s</td>
         <td>%s</td>
-        <td>%f</td>
+        <td>%s</td>
     </tr>
 """ % (recipe.name, ingredients, missing_ingredients)
         data += "</table>"
