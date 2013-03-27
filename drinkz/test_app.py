@@ -21,6 +21,40 @@ class TestWsgiApp(object):
         db.add_bottle_type('Rossi', 'extra dry vermouth', 'vermouth')
         db.add_to_inventory('Rossi', 'extra dry vermouth', '24 oz')
         
+    def test_wsgi_bottle_types(self):
+        server = app.SimpleApp()
+        environ = {
+            'REQUEST_METHOD': 'GET',
+            'PATH_INFO': '/bottletypes'
+        }
+        output = server.__call__(environ, fake_start_response)
+        lookfor = """
+    <tr>
+        <td>Johnnie Walker</td>
+        <td>black label</td>
+        <td>blended scotch</td>
+    </tr>
+"""
+
+        assert lookfor in output[0]
+        
+    def test_wsgi_inventory(self):
+        server = app.SimpleApp()
+        environ = {
+            'REQUEST_METHOD': 'GET',
+            'PATH_INFO': '/inventory'
+        }
+        output = server.__call__(environ, fake_start_response)
+        lookfor = """
+    <tr>
+        <td>Johnnie Walker</td>
+        <td>black label</td>
+        <td>500.00 ml</td>
+    </tr>
+"""
+
+        assert lookfor in output[0]
+        
     def test_wsgi_recipes(self):
         r = recipes.Recipe('whiskey lake', [('blended scotch', '6 liter')])
         db.add_recipe(r)

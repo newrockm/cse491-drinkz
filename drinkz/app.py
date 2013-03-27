@@ -74,7 +74,7 @@ class SimpleApp(object):
     <tr>
         <td>%s</td>
         <td>%s</td>
-        <td>%f</td>
+        <td>%.2f ml</td>
     </tr>
 """ % (mfg, liquor, amount)
         data += "</table>"
