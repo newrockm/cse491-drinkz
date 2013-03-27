@@ -92,8 +92,15 @@ class SimpleApp(object):
     </tr>
 """
         for recipe in db.get_all_recipes():
-            ingredients = ', '.join(db.ingredients)
-            missing_ingredients = ', '.join(db.need_ingredients())
+            ingredients = []
+            for liquor, amount in db.ingredients:
+                ingredients.append("%.2fml %s" % (amount, liquor))
+            ingredients = ', '.join(ingredients)
+
+            missing_ingredients = []
+            for liquor, amount in db.need_ingredients:
+                missing_ingredients.append("%.2fml %s" % (amount, liquor))
+            missing_ingredients = ', '.join(missing_ingredients)
             data += """
     <tr>
         <td>%s</td>
