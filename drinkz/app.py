@@ -36,12 +36,16 @@ class SimpleApp(object):
         db.load_db(filename)
 
     def index(self, environ, start_response):
-        data = menu()
+        data = header('index')
+        data += """
+<p><button onclick="myFunction();">Alert!</button></p>
+"""
+        data += footer()
         start_response('200 OK', list(html_headers))
         return [data]
         
     def show_bottle_types(self, environ, start_response):
-        data = menu()
+        data = header('Show Bottle Types')
         data += """<table>
     <tr>
         <th>Manufacturer</th>
@@ -63,7 +67,7 @@ class SimpleApp(object):
         return [data]
 
     def show_inventory(self, environ, start_response):
-        data = menu()
+        data = header('Show Inventory')
         data += """<table>
     <tr>
         <th>Manufacturer</th>
@@ -86,7 +90,7 @@ class SimpleApp(object):
         return [data]
 
     def show_recipes(self, environ, start_response):
-        data = menu()
+        data = header('Show Recipes')
         data += """<table>
     <tr>
         <th>Recipes</th>
@@ -117,7 +121,7 @@ class SimpleApp(object):
         return [data]
 
     def ml_convert_form(self, environ, start_response):
-        data = menu()
+        data = header('Convert to Milliliters')
         data += ml_form()
         data += footer()
         start_response('200 OK', list(html_headers))
@@ -125,7 +129,7 @@ class SimpleApp(object):
 
     # http://webpython.codepoint.net/wsgi_request_parsing_post
     def show_ml_convert(self, environ, start_response):
-        data = menu()
+        data = header('Convert to Milliliters Result')
 
         if environ['REQUEST_METHOD'].endswith('POST'):
             body = None
@@ -152,10 +156,32 @@ class SimpleApp(object):
         return [data]
 
     
+def header(title):
+    return """
+<html>
+<head>
+<title>%s</title>
+<style type='text/css'>
+h1 {color:red;}
+body {
+font-size: 14px;
+}
+</style>
+<script>
+function myFunction()
+{
+alert("Hello! I am an alert box!");
+}
+</script>
+</head>
+<body>
+%s
+<h1>%s</h1>
+""" % (title, menu(), title)
+
 def menu():
     return """
 <p>
-View:
 [ <a href="bottletypes">Show Bottle Types</a> ]
 [ <a href="inventory">Show Inventory</a> ]
 [ <a href="recipes">Show Recipes</a> ]
@@ -164,7 +190,11 @@ View:
 """
 
 def footer():
-    return '<p><a href="/">Return to index</a></p>'
+    return """
+<p><a href="/">Index</a></p>
+</body>
+</html>
+"""
 
 def ml_form():
     return """
