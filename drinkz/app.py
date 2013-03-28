@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from wsgiref.simple_server import make_server
+import simplejson
 import urlparse
 import db
 
@@ -11,6 +12,7 @@ dispatch = {
     '/recipes' : 'show_recipes',
     '/convert' : 'ml_convert_form',
     '/convertresult' : 'show_ml_convert',
+    '/rpc' : 'dispatch_rpc'
 }
 
 html_headers = [('Content-type', 'text/html')]
@@ -155,7 +157,63 @@ class SimpleApp(object):
         start_response('200 OK', list(html_headers))
         return [data]
 
+    def dispatch_rpc(self, environ, start_response):
+        # POST requests deliver input data via a file-like handle,
+        # with the size of the data specified by CONTENT_LENGTH;
+        # see the WSGI PEP.
+        
+        if environ['REQUEST_METHOD'].endswith('POST'):
+            body = None
+            if environ.get('CONTENT_LENGTH'):
+                length = int(environ['CONTENT_LENGTH'])
+                body = environ['wsgi.input'].read(length)
+                response = self._dispatch(body) + '\n'
+                start_response('200 OK', [('Content-Type', 'application/json')])
+
+                return [response]
+
+        # default to a non JSON-RPC error.
+        status = "404 Not Found"
+        content_type = 'text/html'
+        data = "Couldn't find your stuff."
+       
+        start_response('200 OK', list(html_headers))
+        return [data]
     
+    def _decode(self, json):
+        return simplejson.loads(json)
+
+    def _dispatch(self, json):
+        rpc_request = self._decode(json)
+
+        method = rpc_request['method']
+        params = rpc_request['params']
+        
+        rpc_fn_name = 'rpc_' + method
+        fn = getattr(self, rpc_fn_name)
+        result = fn(*params)
+
+        response = { 'result' : result, 'error' : None, 'id' : 1 }
+        response = simplejson.dumps(response)
+        return str(response)
+
+    def rpc_convert_units_to_ml(self, amount):
+        return round(db.convert_to_ml(amount), 2)
+
+    def rpc_get_recipe_names(self):
+        names = []
+        for r in db.get_all_recipes():
+            names.append(r.name)
+        names.sort()
+        return names
+
+    def rpc_get_liquor_inventory(self):
+        inventory = []
+        for inv in db.get_liquor_inventory():
+            inventory.append(inv)
+        inventory.sort()
+        return inventory
+
 def header(title):
     return """
 <html>
