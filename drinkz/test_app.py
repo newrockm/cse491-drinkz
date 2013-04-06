@@ -7,6 +7,7 @@ from . import app, db, recipes
 
 class TestWsgiApp(object):
     def setUp(self):
+        self.status = None
         db._reset_db()
 
         db.add_bottle_type('Johnnie Walker', 'black label', 'blended scotch')
@@ -27,7 +28,9 @@ class TestWsgiApp(object):
             'REQUEST_METHOD': 'GET',
             'PATH_INFO': '/bottletypes'
         }
-        output = server.__call__(environ, fake_start_response)
+        output = server(environ, self._start_response)
+        assert self.status.startswith("200")
+
         lookfor = """
     <tr>
         <td>Johnnie Walker</td>
@@ -44,7 +47,9 @@ class TestWsgiApp(object):
             'REQUEST_METHOD': 'GET',
             'PATH_INFO': '/inventory'
         }
-        output = server.__call__(environ, fake_start_response)
+        output = server(environ, self._start_response)
+        assert self.status.startswith("200")
+
         lookfor = """
     <tr>
         <td>Johnnie Walker</td>
@@ -64,7 +69,9 @@ class TestWsgiApp(object):
             'REQUEST_METHOD': 'GET',
             'PATH_INFO': '/recipes'
         }
-        output = server.__call__(environ, fake_start_response)
+        output = server(environ, self._start_response)
+        assert self.status.startswith("200")
+
         lookfor = """
     <tr>
         <td>whiskey lake</td>
@@ -86,7 +93,9 @@ class TestWsgiApp(object):
             'REQUEST_METHOD': 'GET',
             'PATH_INFO': '/canmake'
         }
-        output = server(environ, fake_start_response)
+        output = server(environ, self._start_response)
+        assert self.status.startswith("200")
+
         lookfor = """
     <tr>
         <td>scotch on the rocks</td>
@@ -103,8 +112,8 @@ class TestWsgiApp(object):
 """
         assert looknot not in output[0]
 
-
-def fake_start_response(status, response_headers, exc_info=None):
-    # not actually going to do anything with the response
-    pass
+    def _start_response(self, status, response_headers, exc_info=None):
+        # not actually going to do anything with the response
+        self.status = status
+        pass
 

@@ -9,6 +9,7 @@ from . import app, db, recipes
 
 class TestWsgiApp(object):
     def setUp(self):
+        self.status = None
         db._reset_db()
 
     def _initdb(self):
@@ -58,7 +59,7 @@ class TestWsgiApp(object):
             'wsgi.input': inp
         }
 
-        json_response = server.__call__(environ, fake_start_response)
+        json_response = server(environ, self._start_response)
         response = simplejson.loads(json_response[0])
 
         return response
@@ -71,6 +72,7 @@ class TestWsgiApp(object):
         }
 
         response = self._call_server(d)
+        assert self.status.startswith("200")
 
         assert response['error'] == None
         assert response['result'] == 147.87
@@ -85,6 +87,7 @@ class TestWsgiApp(object):
         }
 
         response = self._call_server(d)
+        assert self.status.startswith("200")
 
         assert response['error'] == None
         assert response['result'] == [
@@ -104,6 +107,7 @@ class TestWsgiApp(object):
         }
 
         response = self._call_server(d)
+        assert self.status.startswith("200")
 
         assert response['error'] == None
         # tuples become lists
@@ -115,7 +119,6 @@ class TestWsgiApp(object):
         ]
 
 
-def fake_start_response(status, response_headers, exc_info=None):
-    # not actually going to do anything with the response
-    pass
+    def _start_response(self, status, response_headers, exc_info=None):
+        self.status = status
 
