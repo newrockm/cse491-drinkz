@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form action="convertresult" method="post">
+    Amount: <input type="text" name="amount" size="10">
+    Unit: <select name="unit">
+        <option value="ml">milliliters</option>
+        <option value="l">liters</option>
+        <option value="oz" selected="selected">ounces</option>
+        <option value="gallon">gallons</option>
+    </select>
+    <input type="submit">
+</form>
+
+{% endblock %}
+

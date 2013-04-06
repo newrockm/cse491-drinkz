@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table>
+    <tr>
+        <th>Manufacturer</th>
+        <th>Liquor</th>
+        <th>Type</th>
+    </tr>
+{% for mfg, liquor, typ in bottle_types %}
+    <tr>
+        <td>{{ mfg|e }}</td>
+        <td>{{ liquor|e }}</td>
+        <td>{{ typ|e }}</td>
+    </tr>
+{% endfor %}
+</table>
+
+{% endblock %}
+

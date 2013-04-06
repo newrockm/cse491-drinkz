@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if recipes|length == 0 %}
+<p>None. You suck.</p>
+{% else %}
+<table>
+    <tr>
+        <th>Recipe</th>
+        <th>Ingredients</th>
+    </tr>
+{% for name, ingredients in recipes %}
+    <tr>
+        <td>{{ name|e }}</td>
+        <td>{{ ingredients|e }}</td>
+    </tr>
+{% endfor %}
+</table>
+{% endif %}
+
+{% endblock %}
+

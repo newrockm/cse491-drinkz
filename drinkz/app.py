@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 from wsgiref.simple_server import make_server
+import jinja2
 import simplejson
 import urlparse
 import db
@@ -19,6 +20,10 @@ dispatch = {
 html_headers = [('Content-type', 'text/html')]
 
 class SimpleApp(object):
+    def __init__(self):
+        loader = jinja2.FileSystemLoader('./drinkz/templates')
+        self.jenv = jinja2.Environment(loader=loader)
+
     def __call__(self, environ, start_response):
 
         path = environ['PATH_INFO']
@@ -34,140 +39,83 @@ class SimpleApp(object):
             return ["No path %s found" % path]
 
         return fn(environ, start_response)
-            
+        
+    def _render(self, filename, title, vars = {}):
+        template = self.jenv.get_template(filename)
+        vars['title'] = title
+        return template.render(vars).__str__()
+
     def load_db(self, filename):
         db.load_db(filename)
 
     def index(self, environ, start_response):
-        data = header('index')
-        data += """
-<p><button onclick="myFunction();">Alert!</button></p>
-"""
-        data += footer()
+        data = self._render('index.html', 'index')
         start_response('200 OK', list(html_headers))
         return [data]
         
     def show_bottle_types(self, environ, start_response):
-        data = header('Show Bottle Types')
-        data += """<table>
-    <tr>
-        <th>Manufacturer</th>
-        <th>Liquor</th>
-        <th>Type</th>
-    </tr>
-"""
-        for (mfg, liquor, typ) in db.get_bottle_types():
-            data += """
-    <tr>
-        <td>%s</td>
-        <td>%s</td>
-        <td>%s</td>
-    </tr>
-""" % (mfg, liquor, typ)
-        data += "</table>"
-        data += footer()
+        vars = {'bottle_types': db.get_bottle_types()}
+        data = self._render('bottletypes.html', 'Show Bottle Types', vars)
         start_response('200 OK', list(html_headers))
         return [data]
 
     def show_inventory(self, environ, start_response):
-        data = header('Show Inventory')
-        data += """<table>
-    <tr>
-        <th>Manufacturer</th>
-        <th>Liquor</th>
-        <th>Amount</th>
-    </tr>
-"""
+        inventory = []
         for (mfg, liquor) in db.get_liquor_inventory():
             amount = db.get_liquor_amount(mfg, liquor)
-            data += """
-    <tr>
-        <td>%s</td>
-        <td>%s</td>
-        <td>%.2f ml</td>
-    </tr>
-""" % (mfg, liquor, amount)
-        data += "</table>"
-        data += footer()
+            inventory.append((mfg, liquor, amount))
+        vars = {'inventory': inventory}
+        data = self._render('inventory.html', 'Show Inventory', vars)
         start_response('200 OK', list(html_headers))
         return [data]
 
     def show_recipes(self, environ, start_response):
-        data = header('Show Recipes')
-        data += """<table>
-    <tr>
-        <th>Recipe</th>
-        <th>Ingredients</th>
-        <th>Missing Ingredients</th>
-    </tr>
-"""
-        for recipe in db.get_all_recipes():
+        recipes = []
+        for rec in db.get_all_recipes():
             ingredients = []
-            for liquor, amount in recipe.ingredients:
+            for liquor, amount in rec.ingredients:
                 ingredients.append("%s %s" % (amount, liquor))
             ingredients = ', '.join(ingredients)
 
             missing_ingredients = []
-            for liquor, amount in recipe.need_ingredients():
+            for liquor, amount in rec.need_ingredients():
                 missing_ingredients.append("%.2fml %s" % (amount, liquor))
             missing_ingredients = ', '.join(missing_ingredients)
-            data += """
-    <tr>
-        <td>%s</td>
-        <td>%s</td>
-        <td>%s</td>
-    </tr>
-""" % (recipe.name, ingredients, missing_ingredients)
-        data += "</table>"
-        data += footer()
+
+            recipes.append((rec.name, ingredients, missing_ingredients))
+        vars = {'recipes': recipes}
+        data = self._render('recipes.html', 'Show Recipes', vars)
         start_response('200 OK', list(html_headers))
         return [data]
 
     def show_can_make(self, environ, start_response):
         can_make = []
-        for recipe in db.get_all_recipes():
-            missing = recipe.need_ingredients()
+        for rec in db.get_all_recipes():
+            missing = rec.need_ingredients()
             if len(missing) == 0:
-                can_make.append(recipe)
+                can_make.append(rec)
 
-        data = header('Recipes you can make')
-        if len(can_make) == 0:
-            data += "<p>None. You suck.</p>"
-        else:
-            data += """<table>
-    <tr>
-        <th>Recipe</th>
-        <th>Ingredients</th>
-    </tr>
-"""
-            for recipe in can_make:
-                ingredients = []
-                for liquor, amount in recipe.ingredients:
-                    ingredients.append("%s %s" % (amount, liquor))
-                ingredients = ', '.join(ingredients)
+        recipes = []
+        for rec in can_make:
+            ingredients = []
+            for liquor, amount in rec.ingredients:
+                ingredients.append("%s %s" % (amount, liquor))
+            ingredients = ', '.join(ingredients)
+            recipes.append((rec.name, ingredients))
 
-                data += """
-    <tr>
-        <td>%s</td>
-        <td>%s</td>
-    </tr>
-""" % (recipe.name, ingredients)
-            data += "</table>"
-
-        data += footer()
+        vars = {'recipes': recipes}
+        data = self._render('canmake.html', 'Recipes you can make', vars)
         start_response('200 OK', list(html_headers))
         return [data]
 
     def ml_convert_form(self, environ, start_response):
-        data = header('Convert to Milliliters')
-        data += ml_form()
-        data += footer()
+        data = self._render('convert.html', 'Convert to Milliliters')
         start_response('200 OK', list(html_headers))
         return [data]
 
     # http://webpython.codepoint.net/wsgi_request_parsing_post
     def show_ml_convert(self, environ, start_response):
-        data = header('Convert to Milliliters Result')
+        vars = {}
 
         if environ['REQUEST_METHOD'].endswith('POST'):
             body = None
@@ -178,10 +126,12 @@ class SimpleApp(object):
                 try:
                     amount = "%s %s" % (d['amount'][0], d['unit'][0])
                     converted = db.convert_to_ml(amount)
-                    data += "<p>%s is %d ml</p>" % (amount, converted)
-                except KeyError:
-                    data += "<p>Error processing form.</p>"
-        data += footer()
+                    vars['amount'] = amount
+                    vars['converted'] = converted
+                except (KeyError, ValueError):
+                    vars['error'] = "Error processing form."
+
+        data = self._render('convertresult.html', 'Convert to Milliliters Result', vars)
         start_response('200 OK', list(html_headers))
         return [data]
 
@@ -190,7 +140,7 @@ class SimpleApp(object):
         content_type = 'text/html'
         data = "Couldn't find your stuff."
        
-        start_response('200 OK', list(html_headers))
+        start_response(status, list(html_headers))
         return [data]
 
     def dispatch_rpc(self, environ, start_response):
@@ -213,7 +163,7 @@ class SimpleApp(object):
         content_type = 'text/html'
         data = "Couldn't find your stuff."
        
-        start_response('200 OK', list(html_headers))
+        start_response(status, list(html_headers))
         return [data]
     
     def _decode(self, json):
@@ -249,59 +199,4 @@ class SimpleApp(object):
             inventory.append(inv)
         inventory.sort()
         return inventory
-
-def header(title):
-    return """
-<html>
-<head>
-<title>%s</title>
-<style type='text/css'>
-h1 {color:red;}
-body {
-font-size: 14px;
-}
-</style>
-<script>
-function myFunction()
-{
-alert("Hello! I am an alert box!");
-}
-</script>
-</head>
-<body>
-%s
-<h1>%s</h1>
-""" % (title, menu(), title)
-
-def menu():
-    return """
-<p>
-[ <a href="bottletypes">Show Bottle Types</a> ]
-[ <a href="inventory">Show Inventory</a> ]
-[ <a href="recipes">Show Recipes</a> ]
-[ <a href="canmake">Available Recipes</a> ]
-[ <a href="convert">Convert to milliliters</a> ]
-</p>
-"""
-
-def footer():
-    return """
-<p><a href="/">Index</a></p>
-</body>
-</html>
-"""
-
-def ml_form():
-    return """
-<form action="convertresult" method="post">
-    Amount: <input type="text" name="amount" size="10">
-    Unit: <select name="unit">
-        <option value="ml">milliliters</option>
-        <option value="l">liters</option>
-        <option value="oz" selected="selected">ounces</option>
-        <option value="gallon">gallons</option>
-    </select>
-    <input type="submit">
-</form>
-"""
 

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<table>
+    <tr>
+        <th>Recipe</th>
+        <th>Ingredients</th>
+        <th>Missing Ingredients</th>
+    </tr>
+{% for name, ingredients, missing in recipes %}
+    <tr>
+        <td>{{ name|e }}</td>
+        <td>{{ ingredients|e }}</td>
+        <td>{{ missing|e}}</td>
+    </tr>
+{% endfor %}
+</table>
+
+{% endblock %}
+
