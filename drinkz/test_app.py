@@ -75,6 +75,35 @@ class TestWsgiApp(object):
 
         assert lookfor in output[0]
 
+    def test_wsgi_canmake(self):
+        r = recipes.Recipe('scotch on the rocks', [('blended scotch', '4 oz')])
+        db.add_recipe(r)
+        r = recipes.Recipe('whiskey lake', [('blended scotch', '6 liter')])
+        db.add_recipe(r)
+
+        server = app.SimpleApp()
+        environ = {
+            'REQUEST_METHOD': 'GET',
+            'PATH_INFO': '/canmake'
+        }
+        output = server(environ, fake_start_response)
+        lookfor = """
+    <tr>
+        <td>scotch on the rocks</td>
+        <td>4 oz blended scotch</td>
+    </tr>
+"""
+        assert lookfor in output[0]
+
+        looknot = """
+    <tr>
+        <td>whiskey lake</td>
+        <td>6 liter blended scotch</td>
+    </tr>
+"""
+        assert looknot not in output[0]
+
+
 def fake_start_response(status, response_headers, exc_info=None):
     # not actually going to do anything with the response
     pass
