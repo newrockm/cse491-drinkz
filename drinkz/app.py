@@ -10,6 +10,7 @@ dispatch = {
     '/bottletypes' : 'show_bottle_types',
     '/inventory' : 'show_inventory',
     '/recipes' : 'show_recipes',
+    '/canmake' : 'show_can_make',
     '/convert' : 'ml_convert_form',
     '/convertresult' : 'show_ml_convert',
     '/rpc' : 'dispatch_rpc'
@@ -95,7 +96,7 @@ class SimpleApp(object):
         data = header('Show Recipes')
         data += """<table>
     <tr>
-        <th>Recipes</th>
+        <th>Recipe</th>
         <th>Ingredients</th>
         <th>Missing Ingredients</th>
     </tr>
@@ -118,6 +119,41 @@ class SimpleApp(object):
     </tr>
 """ % (recipe.name, ingredients, missing_ingredients)
         data += "</table>"
+        data += footer()
+        start_response('200 OK', list(html_headers))
+        return [data]
+
+    def show_can_make(self, environ, start_response):
+        can_make = []
+        for recipe in db.get_all_recipes():
+            missing = recipe.need_ingredients()
+            if len(missing) == 0:
+                can_make.append(recipe)
+
+        data = header('Recipes you can make')
+        if len(can_make) == 0:
+            data += "<p>None. You suck.</p>"
+        else:
+            data += """<table>
+    <tr>
+        <th>Recipe</th>
+        <th>Ingredients</th>
+    </tr>
+"""
+            for recipe in can_make:
+                ingredients = []
+                for liquor, amount in recipe.ingredients:
+                    ingredients.append("%s %s" % (amount, liquor))
+                ingredients = ', '.join(ingredients)
+
+                data += """
+    <tr>
+        <td>%s</td>
+        <td>%s</td>
+    </tr>
+""" % (recipe.name, ingredients)
+            data += "</table>"
+
         data += footer()
         start_response('200 OK', list(html_headers))
         return [data]
@@ -243,6 +279,7 @@ def menu():
 [ <a href="bottletypes">Show Bottle Types</a> ]
 [ <a href="inventory">Show Inventory</a> ]
 [ <a href="recipes">Show Recipes</a> ]
+[ <a href="canmake">Available Recipes</a> ]
 [ <a href="convert">Convert to milliliters</a> ]
 </p>
 """
