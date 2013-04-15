@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form action="/recipes" method="POST">
+<p>
+    Name:
+    <input name="name" type="text" size="40" />
+</p>
+{% for num in range(1, 6) %}
+<p>
+    Ingredient {{ num }}:
+    <input name="qty{{num}}" type="text" size="10">
+    <select name="unit{{num}}">
+        <option value="ml">milliliters</option>
+        <option value="l">liters</option>
+        <option value="oz">ounces</option>
+        <option value="gallon">gallons</option>
+    </select>
+    <select name="typ{{num}}">
+    {% for typ in liquor_types %}
+        <option value="{{typ}}">{{typ}}</option>
+    {% endfor %}
+    </select>
+</p>
+{% endfor %}
+<p>
+    <input type="submit" name="submit" value="Submit" />
+    <input type="reset" value="Reset" />
+    <input type="submit" name="cancel" value="Cancel" />
+</p>
+</form>
+
+{% endblock %}
+

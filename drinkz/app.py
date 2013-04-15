@@ -5,6 +5,7 @@ import jinja2
 import simplejson
 import urlparse
 import db
+from recipes import Recipe
 
 dispatch = {
     '/' : 'index',
@@ -13,6 +14,7 @@ dispatch = {
     '/inventory' : 'show_inventory',
     '/add_inventory' : 'add_inventory',
     '/recipes' : 'show_recipes',
+    '/add_recipe' : 'add_recipe',
     '/canmake' : 'show_can_make',
     '/convert' : 'ml_convert_form',
     '/convertresult' : 'show_ml_convert',
@@ -139,7 +141,11 @@ class SimpleApp(object):
         return error
 
     def show_recipes(self, environ, start_response):
+        vars = {}
         recipes = []
+        if environ['REQUEST_METHOD'].endswith('POST'):
+            vars['error'] = self.do_add_recipe(environ)
+
         for rec in db.get_all_recipes():
             ingredients = []
             for liquor, amount in rec.ingredients:
@@ -152,10 +158,50 @@ class SimpleApp(object):
             missing_ingredients = ', '.join(missing_ingredients)
 
             recipes.append((rec.name, ingredients, missing_ingredients))
-        vars = {'recipes': recipes}
+        vars['recipes'] = recipes
         data = self._render('recipes.html', 'Show Recipes', vars)
         start_response('200 OK', list(html_headers))
         return [data]
+
+    def add_recipe(self, environ, start_response):
+        liquor_types = set()
+        for bottle in db.get_bottle_types():
+            liquor_types.add(bottle[2])
+        liquor_types = list(liquor_types)
+        liquor_types.sort()
+        vars = {'liquor_types': liquor_types}
+        data = self._render('form_recipe.html', 'Add To Inventory', vars)
+        start_response('200 OK', list(html_headers))
+        return [data]
+
+    def do_add_recipe(self, environ):
+        error = None
+        if environ.get('CONTENT_LENGTH'):
+            length = int(environ['CONTENT_LENGTH'])
+            body = environ['wsgi.input'].read(length)
+            d = urlparse.parse_qs(body)
+            if d.has_key('cancel'):
+                # nothing submitted, nothing to do
+                return error
+            try:
+                name = d['name'][0]
+                ingredients = []
+                for num in range(1,6):
+                    n = str(num)
+                    if not d.has_key('qty' + n):
+                        # ingredient not present
+                        continue
+                    # this will cause a ValueError if qty is not a number
+                    qty = float(d['qty' + n][0])
+                    # but we don't care about that other than to get the error
+                    amount = '%s %s' % (d['qty' + n][0], d['unit' + n][0])
+                    typ = d['typ' + n][0]
+                    ingredients.append((typ, amount))
+                r = Recipe(name, ingredients)
+                db.add_recipe(r)
+            except (KeyError, ValueError):
+                error = "Error processing form."
+        return error
 
     def show_can_make(self, environ, start_response):
         can_make = []
