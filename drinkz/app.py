@@ -11,6 +11,7 @@ dispatch = {
     '/bottletypes' : 'show_bottle_types',
     '/add_bottletype': 'add_bottle_type',
     '/inventory' : 'show_inventory',
+    '/add_inventory' : 'add_inventory',
     '/recipes' : 'show_recipes',
     '/canmake' : 'show_can_make',
     '/convert' : 'ml_convert_form',
@@ -75,6 +76,9 @@ class SimpleApp(object):
             length = int(environ['CONTENT_LENGTH'])
             body = environ['wsgi.input'].read(length)
             d = urlparse.parse_qs(body)
+            if d.has_key('cancel'):
+                # nothing submitted, nothing to do
+                return error
             try:
                 mfg = d['mfg'][0]
                 liquor = d['liquor'][0]
@@ -82,16 +86,57 @@ class SimpleApp(object):
                 db.add_bottle_type(mfg, liquor, typ)
             except (KeyError, ValueError):
                 error = "Error processing form."
+        return error
 
     def show_inventory(self, environ, start_response):
+        vars = {}
         inventory = []
+        if environ['REQUEST_METHOD'].endswith('POST'):
+            vars['error'] = self.do_add_inventory(environ)
+
         for (mfg, liquor) in db.get_liquor_inventory():
             amount = db.get_liquor_amount(mfg, liquor)
             inventory.append((mfg, liquor, amount))
-        vars = {'inventory': inventory}
+        vars['inventory'] = inventory
         data = self._render('inventory.html', 'Show Inventory', vars)
         start_response('200 OK', list(html_headers))
         return [data]
+
+    def add_inventory(self, environ, start_response):
+        manufacturers = []
+        liquors = []
+        for bottle in db.get_bottle_types():
+            manufacturers.append(bottle[0])
+            liquors.append(bottle[1])
+        manufacturers.sort()
+        liquors.sort()
+        vars = {'manufacturers': manufacturers, 'liquors': liquors}
+        data = self._render('form_inventory.html', 'Add To Inventory', vars)
+        start_response('200 OK', list(html_headers))
+        return [data]
+
+    def do_add_inventory(self, environ):
+        error = None
+        if environ.get('CONTENT_LENGTH'):
+            length = int(environ['CONTENT_LENGTH'])
+            body = environ['wsgi.input'].read(length)
+            d = urlparse.parse_qs(body)
+            if d.has_key('cancel'):
+                # nothing submitted, nothing to do
+                return error
+            try:
+                mfg = d['mfg'][0]
+                liquor = d['liquor'][0]
+                # this will cause a ValueError if qty is not a number
+                qty = float(d['qty'][0])
+                # but we don't care about that other than to get the error
+                amount = '%s %s' % (d['qty'][0], d['unit'][0])
+                db.add_to_inventory(mfg, liquor, amount)
+            except (KeyError, ValueError):
+                error = "Error processing form."
+            except db.LiquorMissing, e:
+                error = e.message
+        return error
 
     def show_recipes(self, environ, start_response):
         recipes = []

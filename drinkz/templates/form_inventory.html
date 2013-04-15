@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- in a perfect world, this would let you choose from the list of
+manufacturers, then use that to populate from the list of liquors.
+However, I don't think I have time to work on that. -->
+
+<form action="/inventory" method="POST">
+<p>
+    Manufacturer:
+    <select name="mfg">
+    {% for mfg in manufacturers %}
+        <option value="{{ mfg }}">{{ mfg }}</option>
+    {% endfor %}
+    </select>
+</p>
+<p>
+    Liquor:
+    <select name="liquor">
+    {% for liquor in liquors %}
+        <option value="{{ liquor }}">{{ liquor }}</option>
+    {% endfor %}
+    </select>
+</p>
+<p>
+    Amount:
+    <input name="qty" type="text" size="10" />
+    <select name="unit">
+        <option value="ml">milliliters</option>
+        <option value="l">liters</option>
+        <option value="oz">ounces</option>
+        <option value="gallon">gallons</option>
+    </select>
+</p>
+<p>
+    <input type="submit" name="submit" value="Submit" />
+    <input type="reset" value="Reset" />
+    <input type="submit" name="cancel" value="Cancel" />
+</p>
+</form>
+
+{% endblock %}
+
