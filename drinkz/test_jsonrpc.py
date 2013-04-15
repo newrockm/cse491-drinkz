@@ -118,6 +118,134 @@ class TestWsgiApp(object):
             ["Uncle Herman's", 'moonshine']
         ]
 
+    def test_add_bottle_type(self):
+        self._initdb()
+        d = {
+            'method':'add_bottle_type',
+            'params':['Captain Morgan', 'Dark Rum', 'spiced rum'],
+            'id':4
+        }
+
+        response = self._call_server(d)
+        assert self.status.startswith("200")
+
+        assert response['error'] == None
+        assert response['result'] == 'OK'
+        assert db._check_bottle_type_exists('Captain Morgan', 'Dark Rum')
+
+    def test_add_inventory_1(self):
+        # add with a bottle type that exists
+        self._initdb()
+        mfg = 'Johnnie Walker'
+        liquor = 'black label'
+        current_amount = db.get_liquor_amount(mfg, liquor)
+        d = {
+            'method':'add_inventory',
+            'params':[mfg, liquor, '250 ml'],
+            'id':5
+        }
+
+        response = self._call_server(d)
+        assert self.status.startswith("200")
+
+        assert response['error'] == None
+        assert response['result'] == 'OK'
+
+        new_amount = db.get_liquor_amount(mfg, liquor)
+        assert new_amount == current_amount + 250
+
+    def test_add_inventory_2(self):
+        # add with a bottle type that does not exist
+        self._initdb()
+        mfg = 'Ambrosia'
+        liquor = 'nectar'
+        d = {
+            'method':'add_inventory',
+            'params':[mfg, liquor, '250 ml'],
+            'id':6
+        }
+
+        response = self._call_server(d)
+        assert self.status.startswith("200")
+
+        assert response['error'] == None
+        assert response['result'] != 'OK'
+
+    def test_add_recipe_1(self):
+        # add a recipe with 1 ingredient
+        self._initdb()
+        d = {
+            'method':'add_recipe',
+            'params':['scotch on the rocks', 'blended scotch', '4 oz'],
+            'id':7
+        }
+
+        response = self._call_server(d)
+        assert self.status.startswith("200")
+
+        assert response['error'] == None
+        assert response['result'] == 'OK'
+
+        r = db.get_recipe('scotch on the rocks')
+        assert r != None
+
+    def test_add_recipe_2(self):
+        # add a recipe with two ingredients
+        self._initdb()
+        d = {
+            'method':'add_recipe',
+            'params':['vodka martini',
+                'unflavored vodka', '6 oz',
+                'vermouth', '1.5 oz'],
+            'id':8
+        }
+
+        response = self._call_server(d)
+        assert self.status.startswith("200")
+
+        assert response['error'] == None
+        assert response['result'] == 'OK'
+
+        r = db.get_recipe('vodka martini')
+        assert r != None
+
+    def test_add_recipe_3(self):
+        # add a recipe with no ingredients
+        self._initdb()
+        d = {
+            'method':'add_recipe',
+            'params':'summer breeze',
+            'id':9
+        }
+
+        response = self._call_server(d)
+        assert self.status.startswith("200")
+
+        assert response['error'] == None
+        assert response['result'] != 'OK'
+
+        r = db.get_recipe('summer breeze')
+        assert r == None
+
+    def test_add_recipe_4(self):
+        # add a recipe with a missing ingredient
+        self._initdb()
+        d = {
+            'method':'add_recipe',
+            'params':['vodka martini',
+                'unflavored vodka', '6 oz',
+                'vermouth'],
+            'id':10
+        }
+
+        response = self._call_server(d)
+        assert self.status.startswith("200")
+
+        assert response['error'] == None
+        assert response['result'] != 'OK'
+
+        r = db.get_recipe('vodka martini')
+        assert r == None
 
     def _start_response(self, status, response_headers, exc_info=None):
         self.status = status

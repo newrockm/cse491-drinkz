@@ -290,6 +290,9 @@ class SimpleApp(object):
         method = rpc_request['method']
         params = rpc_request['params']
         
+        if type(params) is not list:
+            params = [params]
+
         rpc_fn_name = 'rpc_' + method
         fn = getattr(self, rpc_fn_name)
         result = fn(*params)
@@ -314,4 +317,31 @@ class SimpleApp(object):
             inventory.append(inv)
         inventory.sort()
         return inventory
+
+    def rpc_add_bottle_type(self, mfg, liquor, typ):
+        db.add_bottle_type(mfg, liquor, typ)
+        return 'OK'
+
+    def rpc_add_inventory(self, mfg, liquor, amount):
+        result = 'OK'
+        try:
+            db.add_to_inventory(mfg, liquor, amount)
+        except db.LiquorMissing, e:
+            result = e.message
+        return result
+
+    def rpc_add_recipe(self, name, *args):
+        if len(args) == 0 or len(args) % 2 != 0:
+            # no ingredients or incorrect number of parameters
+            return 'Error: incorrect number of ingredients'
+
+        ingredients = []
+        num = 0
+        while num < len(args):
+            # type, amount
+            ingredients.append((args[num], args[num + 1]))
+            num += 2
+        r = Recipe(name, ingredients)
+        db.add_recipe(r)
+        return 'OK'
 
