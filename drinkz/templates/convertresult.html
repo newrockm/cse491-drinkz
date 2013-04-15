@@ -2,9 +2,7 @@
 
 {% block content %}
 
-{% if error %}
-<p>{{ error }}</p>
-{% else %}
+{% if error|length == 0 %}
 <p>{{ amount }} is {{ converted }} ml</p
 {% endif %}
 

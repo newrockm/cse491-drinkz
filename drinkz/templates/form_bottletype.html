@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<form action="/bottletypes" method="POST">
+<p>
+    Manufacturer:
+    <input name="mfg" type="text" size="40" />
+</p>
+<p>
+    Liquor:
+    <input name="liquor" type="text" size="40" />
+</p>
+<p>
+    Type:
+    <input name="typ" type="text" size="40" />
+</p>
+<p>
+    <input type="submit" name="Submit" />
+    <input type="reset" name="Reset" />
+    <input type="submit" name="Cancel" />
+</p>
+</form>
+
+{% endblock %}
+

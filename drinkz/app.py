@@ -9,6 +9,7 @@ import db
 dispatch = {
     '/' : 'index',
     '/bottletypes' : 'show_bottle_types',
+    '/add_bottletype': 'add_bottle_type',
     '/inventory' : 'show_inventory',
     '/recipes' : 'show_recipes',
     '/canmake' : 'show_can_make',
@@ -54,10 +55,33 @@ class SimpleApp(object):
         return [data]
         
     def show_bottle_types(self, environ, start_response):
-        vars = {'bottle_types': db.get_bottle_types()}
+        vars = {}
+        if environ['REQUEST_METHOD'].endswith('POST'):
+            vars['error'] = self.do_add_bottle_type(environ)
+
+        vars['bottle_types'] = db.get_bottle_types()
         data = self._render('bottletypes.html', 'Show Bottle Types', vars)
         start_response('200 OK', list(html_headers))
         return [data]
+
+    def add_bottle_type(self, environ, start_response):
+        data = self._render('form_bottletype.html', 'Add Bottle Type')
+        start_response('200 OK', list(html_headers))
+        return [data]
+
+    def do_add_bottle_type(self, environ):
+        error = None
+        if environ.get('CONTENT_LENGTH'):
+            length = int(environ['CONTENT_LENGTH'])
+            body = environ['wsgi.input'].read(length)
+            d = urlparse.parse_qs(body)
+            try:
+                mfg = d['mfg'][0]
+                liquor = d['liquor'][0]
+                typ = d['typ'][0]
+                db.add_bottle_type(mfg, liquor, typ)
+            except (KeyError, ValueError):
+                error = "Error processing form."
 
     def show_inventory(self, environ, start_response):
         inventory = []
