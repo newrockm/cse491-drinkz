@@ -1,0 +1,10 @@
+Recipes can be stored in a csv file, each line of which contains the recipe
+name and one or more pairs of liquor/amount.
+
+Examples:
+scotch on the rocks,blended scotch,4 oz
+vodka martini,unflavored vodka,6 oz,vermouth,1.5 oz
+
+Load recipes with:
+bin/load-recipes <filename>
+

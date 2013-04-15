@@ -1,0 +1,4 @@
+# this file has, at the end, a blank line, which should be handled
+# (ignored!) by our loading script - just like these comments.
+scotch on the rocks,blended scotch,4 oz
+

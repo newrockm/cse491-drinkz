@@ -244,6 +244,65 @@ def test_read_bad_csv_file_load_inventory():
     assert db.check_inventory('Johnnie Walker', 'Black Label') == False
     assert n == 0, n
 
+def test_bulk_load_recipes_1():
+    db._reset_db()
+
+    data = "scotch on the rocks,blended scotch,4 oz"
+    fp = StringIO(data)                 # make this look like a file handle
+    n = load_bulk_data.load_recipes(fp)
+
+    r = db.get_recipe('scotch on the rocks')
+    assert r != None
+    assert n == 1, n
+
+def test_bulk_load_recipes_from_file_1():
+    # test to make sure commented lines in a file are ignored
+    db._reset_db()
+
+    fp = open('test-data/recipe-data-1.txt')
+    n = load_bulk_data.load_recipes(fp)
+    fp.close()
+
+    r = db.get_recipe('scotch on the rocks')
+    assert r != None
+    assert n == 1, n
+
+def test_bulk_load_recipes_from_file_2():
+    # test to make sure commented and empty lines in a file are ignored
+    db._reset_db()
+
+    fp = open('test-data/recipe-data-2.txt')
+    n = load_bulk_data.load_recipes(fp)
+    fp.close()
+
+    r = db.get_recipe('scotch on the rocks')
+    assert r != None
+    assert n == 1, n
+
+def test_bulk_load_recipes_from_file_3():
+    # test to make sure incorrect number of ingredients is ignored
+    db._reset_db()
+
+    fp = open('test-data/recipe-data-3.txt')
+    n = load_bulk_data.load_recipes(fp)
+    fp.close()
+
+    r = db.get_recipe('scotch on the rocks')
+    assert r == None
+    assert n == 0, n
+
+def test_bulk_load_recipes_from_file_4():
+    # test to make sure multiple ingredients are handled
+    db._reset_db()
+
+    fp = open('test-data/recipe-data-4.txt')
+    n = load_bulk_data.load_recipes(fp)
+    fp.close()
+
+    r = db.get_recipe('vodka martini')
+    assert r != None
+    assert n == 1, n
+
 def test_convert_oz_to_ml():
     ml = db.convert_to_ml('5 oz')
     assert round(ml, 2) == 147.87, ml

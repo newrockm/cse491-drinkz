@@ -1,0 +1,2 @@
+# a simple example of a "good" data file.
+scotch on the rocks,blended scotch,4 oz

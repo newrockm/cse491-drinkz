@@ -11,6 +11,7 @@ Module to load in bulk data from text files.
 import csv                              # Python csv package
 
 from . import db                        # import from local package
+from recipes import Recipe
 
 def csv_reader(fp):
     """
@@ -81,3 +82,35 @@ def load_inventory(fp):
             pass
 
     return n
+
+def load_recipes(fp):
+    """
+    Loads in data of the form name,liquor 1,amount 1,... with multiple pairs
+    of liquor/amount allowed.
+
+    Takes a file pointer.
+
+    Adds data to the database.
+
+    Returns number of records loaded.
+    """
+    reader = csv_reader(fp)
+
+    ingredients = []
+    n = 0
+    for line in reader:
+        try:
+            name = line.pop(0)
+            while len(line) > 0:
+                liquor = line.pop(0)
+                amount = line.pop(0)
+                ingredients = (liquor, amount)
+            r = Recipe(name, ingredients)
+            db.add_recipe(r)
+            n += 1
+        except IndexError:
+            print "Ignoring malformed line."
+            pass
+
+    return n
+
