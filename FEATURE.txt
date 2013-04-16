@@ -1,0 +1,21 @@
+New feature: drink ratings.
+
+"Bob wants to know if he should go to a party. He checks the average drink
+rating to see if the alcohol is up to his standards. After seeing that the
+average rating is 1.5 stars, he determines the party is for getting drunk,
+and not for casually consuming alcohol with friends."
+
+Each Recipe will have an additional attribute, rating.  There will also be
+the ability to create a Party, which consists of Recipes.  A Party will have
+a Drink Rating which will consist of the average of all Recipes assigned to
+the Party.
+
+Future Work: If this system were to support users, then individuals could
+rate Recipes.  A Recipe's rating would then be the average of all user
+ratings for that Recipe.  A Party's Drink Rating would then be the average
+of the average Recipe ratings.
+
+db functions will be added to store, retrieve, and calculate Recipe and
+Party ratings.  The Recipe form will include a drop-down of numbers 1-5 for
+drink ratings.  It should be possible to fetch a Recipe or Party rating
+using JSON-RPC.
